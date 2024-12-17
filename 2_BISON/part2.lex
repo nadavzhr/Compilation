@@ -2,6 +2,7 @@
 /* Declarations section */
 #include <stdio.h>
 #include "part2_helpers.h"
+#include "part2.h"
 #include "part2.tab.h"
 
 
@@ -39,12 +40,59 @@ comment     #[^\n\r]*
 
 /* Rules Section in Descending Priority */
 %%
-{reserved_word}                 { return get_reserved_token_type(yytext); }
+int {
+    yylval = makeNode("int", NULL, NULL);
+    return tk_int;
+}
+float {
+    yylval = makeNode("float", NULL, NULL);
+    return tk_float;
+}
+void {
+    yylval = makeNode("void", NULL, NULL);
+    return tk_void;
+}
+write {
+    yylval = makeNode("write", NULL, NULL);
+    return tk_write;
+}
+read {
+    yylval = makeNode("read", NULL, NULL);
+    return tk_read;
+}
+va_arg {
+    yylval = makeNode("va_arg", NULL, NULL);
+    return tk_va_arg;
+}
+while {
+    yylval = makeNode("while", NULL, NULL);
+    return tk_while;
+}
+do {
+    yylval = makeNode("do", NULL, NULL);
+    return tk_do;
+}
+if {
+    yylval = makeNode("if", NULL, NULL);
+    return tk_if;
+}
+then {
+    yylval = makeNode("then", NULL, NULL);
+    return tk_then;
+}
+else {
+    yylval = makeNode("else", NULL, NULL);
+    return tk_else;
+}
+return {
+    yylval = makeNode("return", NULL, NULL);
+    return tk_return;
+}
 {id}                            { yylval = makeNode("id", yytext, NULL); return tk_id; }
 {integernum}                    { yylval = makeNode("integernum", yytext, NULL); return tk_integernum; }
 {realnum}                       { yylval = makeNode("realnum", yytext, NULL); return tk_realnum; }
 {string}                        { yylval = makeNode("string", yytext, NULL); return tk_string; }
-{sign}                          { yylval = makeNode(yytext, NULL, NULL); return yytext; }
+{sign}                          { yylval = makeNode(yytext, NULL, NULL); return yytext[0]; }
 {relop}                         { yylval = makeNode("relop", yytext, NULL); return tk_relop; }
 {addop}                         { yylval = makeNode("addop", yytext, NULL); return tk_addop; }
 {mulop}                         { yylval = makeNode("mulop", yytext, NULL); return tk_mulop; }
@@ -57,94 +105,6 @@ comment     #[^\n\r]*
 .                               { handle_error(); }
 
 %%
-
-/* Helper Functions */
-int get_reserved_token_type(const char *text) {
-    if (strcmp(text, "int") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_int;
-    }
-    if (strcmp(text, "float") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_float;
-    }
-    if (strcmp(text, "void") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_void;
-    }
-    if (strcmp(text, "write") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_write;
-    }
-    if (strcmp(text, "read") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_read;
-    }
-    if (strcmp(text, "va_arg") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_va_arg;
-    }
-    if (strcmp(text, "while") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_while;
-    }
-    if (strcmp(text, "do") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_do;
-    }
-    if (strcmp(text, "if") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_if;
-    }
-    if (strcmp(text, "then") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_then;
-    }
-    if (strcmp(text, "else") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_else;
-    }
-    if (strcmp(text, "return") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_return;
-    }
-    return -1; // Unrecognized token
-}
-// int get_sign_token_type(const char *text) {
-//     if (strcmp(text, "(") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return tk_lparen;
-//     }
-//     if (strcmp(text, ")") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return tk_rparen;
-//     }
-//     if (strcmp(text, "{") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return tk_lbrace;
-//     }
-//     if (strcmp(text, "}") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return tk_rbrace;
-//     }
-//     if (strcmp(text, ",") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return tk_comma;
-//     }
-//     if (strcmp(text, ";") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return tk_semicolon;
-//     }
-//     if (strcmp(text, ":") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return tk_colon;
-//     }
-//     if (strcmp(text, "...") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return tk_ellipsis;
-//     }
-//     return -1; // Unrecognized token
-// }
 
 void handle_error() {
     printf("\nLexical error: '%s' in line number %d\n", yytext, yylineno);

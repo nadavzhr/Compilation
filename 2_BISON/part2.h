@@ -4,4 +4,4 @@
 
 #define YYSTYPE ParserNode*
 
-#endif /*PART2_H*/
+#endif
