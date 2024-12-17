@@ -1,21 +1,22 @@
 %{
-#include <iostream>
-#include <map>
-#include <string>
 #include <stdio.h>
 #include <stdlib.h>
-#include "part2_helpers.h"
+// #include "part2_helpers.h"
+#include "part2.tab.h"
 
-#define YYSTYPE ParserNode*
-int yylex();
+#include "part2.h"
+
+// #define YYSTYPE ParserNode*
+extern int yylex();
+extern char* yytext;
+extern int yylineno;
 void yyerror(const char *s);
+ParserNode*  parseTree = NULL;
 
-map<string, int> vars;
 %}
 
-%left ","
-
-%token "..."
+// %token "," "..."
+%token tk_id
 %token tk_int tk_float tk_void
 %token tk_write tk_read tk_va_arg
 %token tk_while tk_do tk_if tk_then tk_else
@@ -27,7 +28,7 @@ map<string, int> vars;
 %right tk_assign
 
 %left tk_or
-$left tk_and
+%left tk_and
 %left tk_relop
 %left tk_addop
 %left tk_mulop
@@ -52,7 +53,7 @@ FDEFS: FDEFS FUNC_DEF_API BLK { $$ = makeNode("FDEFS", NULL, $1);
     | FDEFS FUNC_DEC_API { $$ = makeNode("FDEFS", NULL, $1);
                         concatList($1, $2); 
     }
-    | /* Empty */ { $$ = makeNode("FDEFS", NULL, makeNode("EPSILON", NULL, NULL)) };
+    | /* Empty */ { $$ = makeNode("FDEFS", NULL, makeNode("EPSILON", NULL, NULL)); };
 
 FUNC_DEC_API: TYPE tk_id "(" ")" ";"
     {
@@ -85,14 +86,14 @@ FUNC_DEC_API: TYPE tk_id "(" ")" ";"
 
 FUNC_DEF_API: TYPE tk_id "(" ")" 
     {
-        $$ = makeNode("FUNC_DEC_API", NULL, $1);
+        $$ = makeNode("FUNC_DEF_API", NULL, $1);
         concatList($1, $2);
         concatList($1, $3);
         concatList($1, $4);
     }
     | TYPE tk_id "(" FUNC_ARGLIST ")" 
     {
-        $$ = makeNode("FUNC_DEC_API", NULL, $1);
+        $$ = makeNode("FUNC_DEF_API", NULL, $1);
         concatList($1, $2);
         concatList($1, $3);
         concatList($1, $4);
@@ -100,7 +101,7 @@ FUNC_DEF_API: TYPE tk_id "(" ")"
     }
     | TYPE tk_id "(" FUNC_ARGLIST "," "..." ")" 
     {
-        $$ = makeNode("FUNC_DEC_API", NULL, $1);
+        $$ = makeNode("FUNC_DEF_API", NULL, $1);
         concatList($1, $2);
         concatList($1, $3);
         concatList($1, $4);
@@ -153,11 +154,11 @@ STLIST: STLIST STMT
 {
     $$ = makeNode("STLIST", NULL, $1);
     concatList($1, $2);
-    concatList($1, $3);
 } 
-| */ Empty */ 
+| /* Empty */
+ 
 { 
-    $$ = makeNode("STLIST", NULL, makeNode("EPSILON", NULL, NULL)) 
+    $$ = makeNode("STLIST", NULL, makeNode("EPSILON", NULL, NULL)); 
 };
 
 STMT: DCL ";" 
@@ -239,10 +240,9 @@ ASSN: LVAL tk_assign EXP ";"
     concatList($1, $2);
     concatList($1, $3);
     concatList($1, $4);
-    concatList($1, $5);
 };
 
-LVAL: id 
+LVAL: tk_id 
 {
     $$ = makeNode("LVAL", NULL, $1);
 };
@@ -271,7 +271,7 @@ CNTRL: tk_if BEXP tk_then STMT tk_else STMT
     concatList($1, $4);
 };
 
-BEXP : BEXP tk_or BEXP
+BEXP: BEXP tk_or BEXP
 {
     $$ = makeNode("BEXP", NULL, $1);
     concatList($1, $2);
@@ -301,7 +301,7 @@ BEXP : BEXP tk_or BEXP
     concatList($1, $3);
 };
 
-EXP : EXP tk_addop EXP
+EXP: EXP tk_addop EXP
 {
     $$ = makeNode("EXP", NULL, $1);
     concatList($1, $2);
@@ -330,16 +330,29 @@ EXP : EXP tk_addop EXP
 {
     $$ = makeNode("EXP", NULL, $1);
 }
-| tk_num
+| NUM
 {
     $$ = makeNode("EXP", NULL, $1);
 }
 | CALL
 {
     $$ = makeNode("EXP", NULL, $1);
+}
+| VA_MATERIALISE
+{
+    $$ = makeNode("EXP", NULL, $1);
 };
 
-CALL : tk_id "(" CALL_ARGS ")"
+NUM: tk_integernum
+{
+    $$ = makeNode("NUM", NULL, $1);
+}
+| tk_realnum
+{
+    $$ = makeNode("NUM", NULL, $1);
+};
+
+CALL: tk_id "(" CALL_ARGS ")"
 {
     $$ = makeNode("CALL", NULL, $1);
     concatList($1, $2);
@@ -347,7 +360,17 @@ CALL : tk_id "(" CALL_ARGS ")"
     concatList($1, $4);
 };
 
-CALL_ARGS : CALL_ARGLIST
+VA_MATERIALISE: tk_va_arg "("  TYPE "," EXP ")"
+{
+    $$ = makeNode("VA_MATERIALISE", NULL, $1);
+    concatList($1, $2);
+    concatList($1, $3);
+    concatList($1, $4);
+    concatList($1, $5);
+    concatList($1, $6);
+};
+
+CALL_ARGS: CALL_ARGLIST
 {
     $$ = makeNode("CALL_ARGS", NULL, $1);
 }
@@ -356,9 +379,7 @@ CALL_ARGS : CALL_ARGLIST
     $$ = makeNode("CALL_ARGS", NULL, makeNode("EPSILON", NULL, NULL));
 };
 
-
-
-CALL_ARGLIST : CALL_ARGLIST "," EXP
+CALL_ARGLIST: CALL_ARGLIST "," EXP
 {
     $$ = makeNode("CALL_ARGLIST", NULL, $1);
     concatList($1, $2);
