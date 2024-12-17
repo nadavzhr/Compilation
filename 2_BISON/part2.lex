@@ -2,6 +2,8 @@
 /* Declarations section */
 #include <stdio.h>
 #include "part2_helpers.h"
+#include "part2.tab.h"
+
 
 void showToken(char *);
 void print_str(char *);
@@ -11,6 +13,8 @@ void handle_error();
 /* Options */
 %option yylineno
 %option noyywrap
+
+%option outfile="part2-lex.c"
 
 /* Regular Expression Definitions */
 digit       [0-9]
@@ -106,41 +110,41 @@ int get_reserved_token_type(const char *text) {
     }
     return -1; // Unrecognized token
 }
-int get_sign_token_type(const char *text) {
-    if (strcmp(text, "(") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_lparen;
-    }
-    if (strcmp(text, ")") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_rparen;
-    }
-    if (strcmp(text, "{") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_lbrace;
-    }
-    if (strcmp(text, "}") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_rbrace;
-    }
-    if (strcmp(text, ",") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_comma;
-    }
-    if (strcmp(text, ";") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_semicolon;
-    }
-    if (strcmp(text, ":") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_colon;
-    }
-    if (strcmp(text, "...") == 0) {
-        yylval = makeNode(text, NULL, NULL);
-        return tk_ellipsis;
-    }
-    return -1; // Unrecognized token
-}
+// int get_sign_token_type(const char *text) {
+//     if (strcmp(text, "(") == 0) {
+//         yylval = makeNode(text, NULL, NULL);
+//         return tk_lparen;
+//     }
+//     if (strcmp(text, ")") == 0) {
+//         yylval = makeNode(text, NULL, NULL);
+//         return tk_rparen;
+//     }
+//     if (strcmp(text, "{") == 0) {
+//         yylval = makeNode(text, NULL, NULL);
+//         return tk_lbrace;
+//     }
+//     if (strcmp(text, "}") == 0) {
+//         yylval = makeNode(text, NULL, NULL);
+//         return tk_rbrace;
+//     }
+//     if (strcmp(text, ",") == 0) {
+//         yylval = makeNode(text, NULL, NULL);
+//         return tk_comma;
+//     }
+//     if (strcmp(text, ";") == 0) {
+//         yylval = makeNode(text, NULL, NULL);
+//         return tk_semicolon;
+//     }
+//     if (strcmp(text, ":") == 0) {
+//         yylval = makeNode(text, NULL, NULL);
+//         return tk_colon;
+//     }
+//     if (strcmp(text, "...") == 0) {
+//         yylval = makeNode(text, NULL, NULL);
+//         return tk_ellipsis;
+//     }
+//     return -1; // Unrecognized token
+// }
 
 void handle_error() {
     printf("\nLexical error: '%s' in line number %d\n", yytext, yylineno);
