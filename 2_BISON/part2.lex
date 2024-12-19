@@ -21,7 +21,8 @@ whitespace  [ \t\n\r]
 
 /* Complex Tokens*/
 reserved_word    int|float|void|write|read|va_arg|while|do|if|then|else|return
-sign        \(|\)|\{|\}|,|;|:|\.\.\.
+sign        \(|\)|\{|\}|,|;|:
+elipsis     \.\.\.
 id          {letter}({letter}|{digit}|_)*
 integernum  {digit}+
 realnum     {digit}+\.{digit}+
@@ -96,6 +97,7 @@ return {
                                 return tk_string;
                                 }
 {sign}                          { yylval = makeNode(yytext, NULL, NULL); return yytext[0]; }
+{elipsis}                       { yylval = makeNode(yytext, NULL, NULL); return tk_elipsis; }
 {relop}                         { yylval = makeNode("relop", yytext, NULL); return tk_relop; }
 {addop}                         { yylval = makeNode("addop", yytext, NULL); return tk_addop; }
 {mulop}                         { yylval = makeNode("mulop", yytext, NULL); return tk_mulop; }
@@ -110,6 +112,6 @@ return {
 %%
 
 void handle_error() {
-    printf("\nLexical error: '%s' in line number %d\n", yytext, yylineno);
+    printf("Lexical error: '%s' in line number %d\n", yytext, yylineno);
     exit(1);
 }

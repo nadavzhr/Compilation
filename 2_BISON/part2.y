@@ -15,6 +15,7 @@ ParserNode*  parseTree = NULL;
 %}
 
 %left ','          
+%left tk_elipsis      
 %token tk_int      
 %token tk_float    
 %token tk_void     
@@ -77,7 +78,7 @@ FUNC_DEC_API: TYPE tk_id '(' ')' ';'
         concatList($1, $5);
         concatList($1, $6);
     }
-    | TYPE tk_id '(' FUNC_ARGLIST ',' '...' ')' ';'
+    | TYPE tk_id '(' FUNC_ARGLIST ',' tk_elipsis ')' ';'
     {
         $$ = makeNode("FUNC_DEC_API", NULL, $1);
         concatList($1, $2);
@@ -104,7 +105,7 @@ FUNC_DEF_API: TYPE tk_id '(' ')'
         concatList($1, $4);
         concatList($1, $5);
     }
-    | TYPE tk_id '(' FUNC_ARGLIST ',' '...' ')' 
+    | TYPE tk_id '(' FUNC_ARGLIST ',' tk_elipsis ')' 
     {
         $$ = makeNode("FUNC_DEF_API", NULL, $1);
         concatList($1, $2);
@@ -398,6 +399,6 @@ CALL_ARGLIST: CALL_ARGLIST ',' EXP
 
 %%
 void yyerror(const char *s) {
-    printf("\nSyntax error: '%s' in line number %d\n", yytext, yylineno);
+    printf("Syntax error: '%s' in line number %d\n", yytext, yylineno);
     exit(1);
 }
