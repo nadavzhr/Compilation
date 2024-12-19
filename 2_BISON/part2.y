@@ -5,15 +5,18 @@
 #include "part2.h"
 #include "part2.tab.h"
 
+// External declarations for lexing and error handling
+extern int yylex();         // Lexer function
+extern char* yytext;        // Current token text
+extern int yylineno;        // Current line number
+void yyerror(const char *s); // Error handler function
 
-extern int yylex();
-extern char* yytext;
-extern int yylineno;
-void yyerror(const char *s);
-ParserNode*  parseTree = NULL;
+// Global root node for the parse tree
+ParserNode* parseTree = NULL;
 
 %}
 
+// Operator precedence and associativity declarations
 %left ','          
 %left tk_elipsis      
 %token tk_int      
@@ -47,20 +50,32 @@ ParserNode*  parseTree = NULL;
 %left ':'          
 
 %%
+
+// Start rule: The root of the grammar
 PROGRAM: FDEFS
     {
         $$ = makeNode("PROGRAM", NULL, $1);
-        parseTree = $$;
+        parseTree = $$; // Assign root of parse tree
     };
-FDEFS: FDEFS FUNC_DEF_API BLK { $$ = makeNode("FDEFS", NULL, $1);
-                                concatList($1, $2);
-                                concatList($1, $3); 
-                            }
-    | FDEFS FUNC_DEC_API { $$ = makeNode("FDEFS", NULL, $1);
-                        concatList($1, $2); 
-    }
-    | /* Empty */ { $$ = makeNode("FDEFS", NULL, makeNode("EPSILON", NULL, NULL)); };
 
+// Function definitions and declarations
+FDEFS: FDEFS FUNC_DEF_API BLK 
+    {
+        $$ = makeNode("FDEFS", NULL, $1);
+        concatList($1, $2);
+        concatList($1, $3); 
+    }
+    | FDEFS FUNC_DEC_API 
+    {
+        $$ = makeNode("FDEFS", NULL, $1);
+        concatList($1, $2); 
+    }
+    | /* Empty */ 
+    {
+        $$ = makeNode("FDEFS", NULL, makeNode("EPSILON", NULL, NULL)); 
+    };
+
+// Function declaration APIs
 FUNC_DEC_API: TYPE tk_id '(' ')' ';'
     {
         $$ = makeNode("FUNC_DEC_API", NULL, $1);
@@ -90,6 +105,7 @@ FUNC_DEC_API: TYPE tk_id '(' ')' ';'
         concatList($1, $8);
     };
 
+// Function definition APIs
 FUNC_DEF_API: TYPE tk_id '(' ')' 
     {
         $$ = makeNode("FUNC_DEF_API", NULL, $1);
@@ -116,19 +132,27 @@ FUNC_DEF_API: TYPE tk_id '(' ')'
         concatList($1, $7);
     };
 
+// Function argument list
 FUNC_ARGLIST: FUNC_ARGLIST ',' DCL 
-{
-    $$ = makeNode("FUNC_ARGLIST", NULL, $1);
-    concatList($1, $2);
-    concatList($1, $3);
-}
-    | DCL { $$ = makeNode("FUNC_ARGLIST", NULL, $1);
-        };
+    {
+        $$ = makeNode("FUNC_ARGLIST", NULL, $1);
+        concatList($1, $2);
+        concatList($1, $3);
+    }
+    | DCL 
+    { 
+        $$ = makeNode("FUNC_ARGLIST", NULL, $1); 
+    };
 
-BLK: '{' STLIST '}' { $$ = makeNode("BLK", NULL, $1);
-                    concatList($1, $2);
-                    concatList($1, $3);
-                };
+// Block handling
+BLK: '{' STLIST '}' 
+    { 
+        $$ = makeNode("BLK", NULL, $1);
+        concatList($1, $2);
+        concatList($1, $3);
+    };
+
+// More rules continue...
 
 DCL: tk_id ':' TYPE
 {

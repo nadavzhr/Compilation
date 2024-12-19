@@ -25,7 +25,7 @@ sign        \(|\)|\{|\}|,|;|:
 elipsis     \.\.\.
 id          {letter}({letter}|{digit}|_)*
 integernum  {digit}+
-realnum     {digit}+\.{digit}+
+realnum     {digit}+\.{digit}+ 
 string      \"(?:(\\["nt])|[^\\\"\n\r])*\"
 relop       ==|<>|<=|>=|<|>
 addop       \+|-
@@ -91,8 +91,8 @@ return {
 {realnum}                       { yylval = makeNode("realnum", yytext, NULL); return tk_realnum; }
 {string}                        { 
                                 char* string = yytext;
-                                string[yyleng-1] = 0;
-                                string++;
+                                string[yyleng-1] = 0; // Remove the first quote
+                                string++; // Remove the last quote
                                 yylval = makeNode("str", string, NULL);
                                 return tk_string;
                                 }
@@ -110,7 +110,7 @@ return {
 .                               { handle_error(); }
 
 %%
-
+// error handling function
 void handle_error() {
     printf("Lexical error: '%s' in line number %d\n", yytext, yylineno);
     exit(1);
