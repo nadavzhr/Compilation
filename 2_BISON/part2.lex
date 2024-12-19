@@ -5,9 +5,6 @@
 #include "part2.h"
 #include "part2.tab.h"
 
-
-void showToken(char *);
-void print_str(char *);
 void handle_error();
 %}
 
@@ -91,7 +88,13 @@ return {
 {id}                            { yylval = makeNode("id", yytext, NULL); return tk_id; }
 {integernum}                    { yylval = makeNode("integernum", yytext, NULL); return tk_integernum; }
 {realnum}                       { yylval = makeNode("realnum", yytext, NULL); return tk_realnum; }
-{string}                        { yylval = makeNode("str", yytext, NULL); return tk_string; }
+{string}                        { 
+                                char* string = yytext;
+                                string[yyleng-1] = 0;
+                                string++;
+                                yylval = makeNode("str", string, NULL);
+                                return tk_string;
+                                }
 {sign}                          { yylval = makeNode(yytext, NULL, NULL); return yytext[0]; }
 {relop}                         { yylval = makeNode("relop", yytext, NULL); return tk_relop; }
 {addop}                         { yylval = makeNode("addop", yytext, NULL); return tk_addop; }
@@ -105,42 +108,7 @@ return {
 .                               { handle_error(); }
 
 %%
-// int get_sign_token_type(const char *text) {
-//     if (strcmp(text, "(") == 0) {
-//         printf("Found ( \n");
-//         yylval = makeNode(text, NULL, NULL);
-//         return "(";
-//     }
-//     if (strcmp(text, ")") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return ")";
-//     }
-//     if (strcmp(text, "{") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return "{";
-//     }
-//     if (strcmp(text, "}") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return "}";
-//     }
-//     if (strcmp(text, ",") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return ",";
-//     }
-//     if (strcmp(text, ";") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return ";";
-//     }
-//     if (strcmp(text, ":") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return ":";
-//     }
-//     if (strcmp(text, "...") == 0) {
-//         yylval = makeNode(text, NULL, NULL);
-//         return "...";
-//     }
-//     return -1; // Unrecognized token
-// }
+
 void handle_error() {
     printf("\nLexical error: '%s' in line number %d\n", yytext, yylineno);
     exit(1);
