@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "part2.h"
 #include "part2.tab.h"
 
@@ -13,29 +14,37 @@ ParserNode*  parseTree = NULL;
 
 %}
 
-%left "," "..."
-%token tk_int tk_float tk_void
-%token tk_write tk_read tk_va_arg
-%token tk_while tk_do
-%token tk_return
-%token tk_id
-%token tk_integernum
-%token tk_realnum
-%token tk_string
-%right tk_if tk_then tk_else
-%right tk_assign
-%left tk_or
-%left tk_and
-%left tk_relop
-%left tk_addop
-%left tk_mulop
-%right tk_not
-%left "("
-%left ")"
-%left "{"
-%left "}"
-%left ";"
-%left ":"
+%left ','          /* Left associative, comma */
+// %left '...'        /* Left associative, ellipsis */
+%token tk_int      /* Integer type token */
+%token tk_float    /* Float type token */
+%token tk_void     /* Void type token */
+%token tk_write    /* Write function token */
+%token tk_read     /* Read function token */
+%token tk_va_arg   /* Varargs token */
+%token tk_while    /* While loop token */
+%token tk_do       /* Do loop token */
+%token tk_return   /* Return keyword */
+%token tk_id       /* Identifier */
+%token tk_integernum /* Integer number */
+%token tk_realnum   /* Real number */
+%token tk_string    /* String */
+%right tk_if       /* Right associative if */
+%right tk_then     /* Right associative then */
+%right tk_else     /* Right associative else */
+%right tk_assign   /* Right associative assignment */
+%left tk_or        /* Left associative logical OR */
+%left tk_and       /* Left associative logical AND */
+%left tk_relop     /* Relational operators */
+%left tk_addop     /* Left associative addition */
+%left tk_mulop     /* Left associative multiplication */
+%right tk_not      /* Right associative NOT */
+%left '('          /* Left associative open parenthesis */
+%left ')'          /* Left associative close parenthesis */
+%left '{'          /* Left associative open brace */
+%left '}'          /* Left associative close brace */
+%left ';'         /* Left associative semicolon */
+%left ':'          /* Left associative colon */
 
 %%
 PROGRAM: FDEFS
@@ -52,7 +61,7 @@ FDEFS: FDEFS FUNC_DEF_API BLK { $$ = makeNode("FDEFS", NULL, $1);
     }
     | /* Empty */ { $$ = makeNode("FDEFS", NULL, makeNode("EPSILON", NULL, NULL)); };
 
-FUNC_DEC_API: TYPE tk_id "(" ")" ";"
+FUNC_DEC_API: TYPE tk_id '(' ')' ';'
     {
         $$ = makeNode("FUNC_DEC_API", NULL, $1);
         concatList($1, $2);
@@ -60,7 +69,7 @@ FUNC_DEC_API: TYPE tk_id "(" ")" ";"
         concatList($1, $4);
         concatList($1, $5);
     }
-    | TYPE tk_id "(" FUNC_ARGLIST ")" ";"
+    | TYPE tk_id '(' FUNC_ARGLIST ')' ';'
     {
         $$ = makeNode("FUNC_DEC_API", NULL, $1);
         concatList($1, $2);
@@ -69,7 +78,7 @@ FUNC_DEC_API: TYPE tk_id "(" ")" ";"
         concatList($1, $5);
         concatList($1, $6);
     }
-    | TYPE tk_id "(" FUNC_ARGLIST "," "..." ")" ";"
+    | TYPE tk_id '(' FUNC_ARGLIST ',' '...' ')' ';'
     {
         $$ = makeNode("FUNC_DEC_API", NULL, $1);
         concatList($1, $2);
@@ -81,14 +90,14 @@ FUNC_DEC_API: TYPE tk_id "(" ")" ";"
         concatList($1, $8);
     };
 
-FUNC_DEF_API: TYPE tk_id "(" ")" 
+FUNC_DEF_API: TYPE tk_id '(' ')' 
     {
         $$ = makeNode("FUNC_DEF_API", NULL, $1);
         concatList($1, $2);
         concatList($1, $3);
         concatList($1, $4);
     }
-    | TYPE tk_id "(" FUNC_ARGLIST ")" 
+    | TYPE tk_id '(' FUNC_ARGLIST ')' 
     {
         $$ = makeNode("FUNC_DEF_API", NULL, $1);
         concatList($1, $2);
@@ -96,7 +105,7 @@ FUNC_DEF_API: TYPE tk_id "(" ")"
         concatList($1, $4);
         concatList($1, $5);
     }
-    | TYPE tk_id "(" FUNC_ARGLIST "," "..." ")" 
+    | TYPE tk_id '(' FUNC_ARGLIST ',' '...' ')' 
     {
         $$ = makeNode("FUNC_DEF_API", NULL, $1);
         concatList($1, $2);
@@ -107,7 +116,7 @@ FUNC_DEF_API: TYPE tk_id "(" ")"
         concatList($1, $7);
     };
 
-FUNC_ARGLIST: FUNC_ARGLIST "," DCL 
+FUNC_ARGLIST: FUNC_ARGLIST ',' DCL 
 {
     $$ = makeNode("FUNC_ARGLIST", NULL, $1);
     concatList($1, $2);
@@ -116,18 +125,18 @@ FUNC_ARGLIST: FUNC_ARGLIST "," DCL
     | DCL { $$ = makeNode("FUNC_ARGLIST", NULL, $1);
         };
 
-BLK: "{" STLIST "}" { $$ = makeNode("BLK", NULL, $1);
+BLK: '{' STLIST '}' { $$ = makeNode("BLK", NULL, $1);
                     concatList($1, $2);
                     concatList($1, $3);
                 };
 
-DCL: tk_id ":" TYPE
+DCL: tk_id ':' TYPE
 {
     $$ = makeNode("DCL", NULL, $1);
     concatList($1, $2);
     concatList($1, $3);
 }
-| tk_id "," DCL 
+| tk_id ',' DCL 
 {
     $$ = makeNode("DCL", NULL, $1);
     concatList($1, $2);
@@ -158,7 +167,7 @@ STLIST: STLIST STMT
     $$ = makeNode("STLIST", NULL, makeNode("EPSILON", NULL, NULL)); 
 };
 
-STMT: DCL ";" 
+STMT: DCL ';'
 {
     $$ = makeNode("STMT", NULL, $1);
     concatList($1, $2);
@@ -167,7 +176,7 @@ STMT: DCL ";"
 {
     $$ = makeNode("STMT", NULL, $1);
 }
-| EXP ";" 
+| EXP ';'
 {
     $$ = makeNode("STMT", NULL, $1);
     concatList($1, $2);
@@ -193,19 +202,19 @@ STMT: DCL ";"
     $$ = makeNode("STMT", NULL, $1);
 };
 
-RETURN: tk_return EXP ";" 
+RETURN: tk_return EXP ';'
 {
     $$ = makeNode("RETURN", NULL, $1);
     concatList($1, $2);
     concatList($1, $3);
 }
-| tk_return";"
+| tk_return';'
 {
     $$ = makeNode("RETURN", NULL, $1);
     concatList($1, $2);
 };
 
-WRITE: tk_write "(" EXP ")" ";" 
+WRITE: tk_write '(' EXP ')' ';'
 {
     $$ = makeNode("WRITE", NULL, $1);
     concatList($1, $2);
@@ -213,7 +222,7 @@ WRITE: tk_write "(" EXP ")" ";"
     concatList($1, $4);
     concatList($1, $5);
 }
-| tk_write "(" tk_string ")" ";" 
+| tk_write '(' tk_string ')' ';'
 {
     $$ = makeNode("WRITE", NULL, $1);
     concatList($1, $2);
@@ -222,7 +231,7 @@ WRITE: tk_write "(" EXP ")" ";"
     concatList($1, $5);
 };
 
-READ: tk_read "(" LVAL ")" ";" 
+READ: tk_read '(' LVAL ')' ';'
 {
     $$ = makeNode("READ", NULL, $1);
     concatList($1, $2);
@@ -231,7 +240,7 @@ READ: tk_read "(" LVAL ")" ";"
     concatList($1, $5);
 };
 
-ASSN: LVAL tk_assign EXP ";" 
+ASSN: LVAL tk_assign EXP ';'
 {
     $$ = makeNode("ASSN", NULL, $1);
     concatList($1, $2);
@@ -291,7 +300,7 @@ BEXP: BEXP tk_or BEXP
     concatList($1, $2);
     concatList($1, $3);
 }
-| "(" BEXP ")"
+| '(' BEXP ')'
 {
     $$ = makeNode("BEXP", NULL, $1);
     concatList($1, $2);
@@ -310,13 +319,13 @@ EXP: EXP tk_addop EXP
     concatList($1, $2);
     concatList($1, $3);
 }
-| "(" EXP ")"
+| '(' EXP ')'
 {
     $$ = makeNode("EXP", NULL, $1);
     concatList($1, $2);
     concatList($1, $3);
 }
-| "(" TYPE ")" EXP
+| '(' TYPE ')' EXP
 {
     $$ = makeNode("EXP", NULL, $1);
     concatList($1, $2);
@@ -349,7 +358,7 @@ NUM: tk_integernum
     $$ = makeNode("NUM", NULL, $1);
 };
 
-CALL: tk_id "(" CALL_ARGS ")"
+CALL: tk_id '(' CALL_ARGS ')'
 {
     $$ = makeNode("CALL", NULL, $1);
     concatList($1, $2);
@@ -357,7 +366,7 @@ CALL: tk_id "(" CALL_ARGS ")"
     concatList($1, $4);
 };
 
-VA_MATERIALISE: tk_va_arg "("  TYPE "," EXP ")"
+VA_MATERIALISE: tk_va_arg '('  TYPE ',' EXP ')'
 {
     $$ = makeNode("VA_MATERIALISE", NULL, $1);
     concatList($1, $2);
@@ -376,7 +385,7 @@ CALL_ARGS: CALL_ARGLIST
     $$ = makeNode("CALL_ARGS", NULL, makeNode("EPSILON", NULL, NULL));
 };
 
-CALL_ARGLIST: CALL_ARGLIST "," EXP
+CALL_ARGLIST: CALL_ARGLIST ',' EXP
 {
     $$ = makeNode("CALL_ARGLIST", NULL, $1);
     concatList($1, $2);
